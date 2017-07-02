@@ -344,6 +344,17 @@
 	};
 };
 
+&spi0 {
+	 gd25q128@0 {
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		compatible = "jedec,spi-nor";
+		reg = <0x0>;
+		spi-max-frequency = <25000000>;
+		status = "okay";
+	};
+};
+
 &h265e {
 	status = "okay";
 };
