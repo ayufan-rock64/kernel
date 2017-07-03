@@ -144,6 +144,14 @@
 		vin-supply = <&vcc_io>;
 	};
 
+	vcc_sys: vsys-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_sys";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+	};
+
 	wireless-wlan {
 		compatible = "wlan-platdata";
 		rockchip,grf = <&grf>;
@@ -224,6 +232,13 @@
 		#gpio-cells = <2>;
 		#clock-cells = <1>;
 		clock-output-names = "xin32k", "rk805-clkout2";
+
+		vcc1-supply = <&vcc_sys>;
+		vcc2-supply = <&vcc_sys>;
+		vcc3-supply = <&vcc_sys>;
+		vcc4-supply = <&vcc_sys>;
+		vcc5-supply = <&vcc_io>;
+		vcc6-supply = <&vcc_io>;
 
 		rtc {
 			status = "disabled";
