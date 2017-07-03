@@ -345,6 +345,13 @@
 };
 
 &spi0 {
+	status = "okay";
+
+	/* SPI DMA does not work currently */
+	/delete-property/ dmas;
+	/delete-property/ #dma-cells;
+	/delete-property/ dma-names;
+
 	 gd25q128@0 {
 		#address-cells = <0x1>;
 		#size-cells = <0x0>;

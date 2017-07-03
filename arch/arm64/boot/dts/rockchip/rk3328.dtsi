@@ -461,12 +461,12 @@
 		#size-cells = <0>;
 		clocks = <&cru SCLK_SPI>, <&cru PCLK_SPI>;
 		clock-names = "spiclk", "apb_pclk";
-		/* dmas = <&dmac 8>, <&dmac 9>; */
-		/* #dma-cells = <2>; */
-		/* dma-names = "tx", "rx"; */
+		dmas = <&dmac 8>, <&dmac 9>;
+		#dma-cells = <2>;
+		dma-names = "tx", "rx";
 		pinctrl-names = "default";
 		pinctrl-0 = <&spi0m2_clk &spi0m2_tx &spi0m2_rx &spi0m2_cs0>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	wdt: watchdog@ff1a0000 {
