@@ -45,7 +45,7 @@
 #include "rk3288-android.dtsi"
 
 / {
-	compatible = "rockchip,rk3288-evb-rk818", "rockchip,rk3288";
+	compatible = "rockchip,rk3288-evb-android-rk818", "rockchip,rk3288";
 
 	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
@@ -70,6 +70,7 @@
 
 	vcc_lcd: vcc-lcd {
 		compatible = "regulator-fixed";
+		regulator-boot-on;
 		enable-active-high;
 		gpio = <&gpio7 3 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
@@ -83,13 +84,63 @@
 	cpu0-supply = <&vdd_cpu>;
 };
 
-&edp_panel {
+&dfi {
+	status = "okay";
+};
+
+&dmc {
+	center-supply = <&vdd_logic>;
+	status = "okay";
+	vop-dclk-mode = <1>;
+};
+
+&route_lvds {
+	status = "okay";
+};
+
+&lvds {
+	status = "okay";
+};
+
+&lvds_panel {
+	status = "okay";
+	compatible ="simple-panel";
+	backlight = <&backlight>;
+	bus-format = <MEDIA_BUS_FMT_RGB666_1X18>;
+	enable-gpios = <&gpio7 4 GPIO_ACTIVE_HIGH>;
+	delay,disable = <10>;
 	power-supply = <&vcc_lcd>;
+	rockchip,data-mapping = "jeida";
+	rockchip,data-width = <24>;
+	rockchip,output = "lvds";
+
+	display-timings {
+		native-mode = <&timing0>;
+		timing0: timing0 {
+			clock-frequency = <71000000>;
+			hactive = <1280>;
+			vactive = <800>;
+			hback-porch = <100>;
+			hfront-porch = <18>;
+			vback-porch = <8>;
+			vfront-porch = <6>;
+			hsync-len = <10>;
+			vsync-len = <2>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <0>;
+			pixelclk-active = <0>;
+		};
+	};
 };
 
 &gpu {
 	status = "okay";
 	mali-supply = <&vdd_gpu>;
+};
+
+&hdmi_analog_sound {
+	status = "okay";
 };
 
 &i2c0 {
@@ -323,48 +374,7 @@
 	};
 };
 
-&lvds_panel {
-	power-supply = <&vcc_lcd>;
-};
-
-&mipi_dsi {
-	status = "okay";
-
-	dsi_panel: dsi_panel {
-		compatible = "simple-panel-dsi";
-		reg = <0>;
-		backlight = <&backlight>;
-		enable-gpios = <&gpio7 4 GPIO_ACTIVE_HIGH>;
-		power-supply = <&vcc_lcd>;
-		dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST)>;
-		dsi,format = <MIPI_DSI_FMT_RGB888>;
-		dsi,lanes = <4>;
-		delay,prepare = <120>;
-		status = "okay";
-
-		disp_timings: display-timings {
-			native-mode = <&timing0>;
-
-			timing0: timing0 {
-				clock-frequency = <150000000>;
-				hactive = <1200>;
-				vactive = <1920>;
-				hback-porch = <80>;
-				hfront-porch = <81>;
-				vback-porch = <21>;
-				vfront-porch = <21>;
-				hsync-len = <10>;
-				vsync-len = <3>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <0>;
-				pixelclk-active = <0>;
-			};
-		};
-	};
-};
-
-&route_mipi {
+&rockchip_suspend {
 	status = "okay";
 };
 
@@ -389,10 +399,10 @@
 
 	pmic {
 		pmic_int: pmic-int {
-			rockchip,pins = <RK_GPIO0 4 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins = <0 4 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 		vsel1_gpio: vsel1-gpio {
-			rockchip,pins = <RK_GPIO0 0 RK_FUNC_GPIO &pcfg_pull_down>;
+			rockchip,pins = <0 0 RK_FUNC_GPIO &pcfg_pull_down>;
 		};
 	};
 };

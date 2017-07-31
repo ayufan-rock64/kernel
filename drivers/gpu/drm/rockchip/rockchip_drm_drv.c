@@ -953,6 +953,54 @@ static void rockchip_drm_debugfs_cleanup(struct drm_minor *minor)
 }
 #endif
 
+static int rockchip_drm_create_properties(struct drm_device *dev)
+{
+	struct drm_property *prop;
+	struct rockchip_drm_private *private = dev->dev_private;
+	const struct drm_prop_enum_list cabc_mode_enum_list[] = {
+		{ ROCKCHIP_DRM_CABC_MODE_DISABLE, "Disable" },
+		{ ROCKCHIP_DRM_CABC_MODE_NORMAL, "Normal" },
+		{ ROCKCHIP_DRM_CABC_MODE_LOWPOWER, "LowPower" },
+		{ ROCKCHIP_DRM_CABC_MODE_USERSPACE, "Userspace" },
+	};
+
+	prop = drm_property_create_enum(dev, 0, "CABC_MODE", cabc_mode_enum_list,
+			ARRAY_SIZE(cabc_mode_enum_list));
+
+	private->cabc_mode_property = prop;
+
+	prop = drm_property_create(dev, DRM_MODE_PROP_BLOB, "CABC_LUT", 0);
+	if (!prop)
+		return -ENOMEM;
+	private->cabc_lut_property = prop;
+
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					"CABC_STAGE_UP", 0, 512);
+	if (!prop)
+		return -ENOMEM;
+	private->cabc_stage_up_property = prop;
+
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					"CABC_STAGE_DOWN", 0, 255);
+	if (!prop)
+		return -ENOMEM;
+	private->cabc_stage_down_property = prop;
+
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					"CABC_GLOBAL_DN", 0, 255);
+	if (!prop)
+		return -ENOMEM;
+	private->cabc_global_dn_property = prop;
+
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					"CABC_CALC_PIXEL_NUM", 0, 1000);
+	if (!prop)
+		return -ENOMEM;
+	private->cabc_calc_pixel_num_property = prop;
+
+	return 0;
+}
+
 static int rockchip_drm_bind(struct device *dev)
 {
 	struct drm_device *drm_dev;
@@ -1012,6 +1060,7 @@ static int rockchip_drm_bind(struct device *dev)
 	drm_mode_config_init(drm_dev);
 
 	rockchip_drm_mode_config_init(drm_dev);
+	rockchip_drm_create_properties(drm_dev);
 
 	ret = rockchip_drm_init_iommu(drm_dev);
 	if (ret)
@@ -1273,6 +1322,8 @@ static struct drm_driver rockchip_drm_driver = {
 	.gem_prime_vmap		= rockchip_gem_prime_vmap,
 	.gem_prime_vunmap	= rockchip_gem_prime_vunmap,
 	.gem_prime_mmap		= rockchip_gem_mmap_buf,
+	.gem_prime_begin_cpu_access = rockchip_gem_prime_begin_cpu_access,
+	.gem_prime_end_cpu_access = rockchip_gem_prime_end_cpu_access,
 #ifdef CONFIG_DEBUG_FS
 	.debugfs_init		= rockchip_drm_debugfs_init,
 	.debugfs_cleanup	= rockchip_drm_debugfs_cleanup,
@@ -1443,6 +1494,12 @@ static int rockchip_drm_platform_probe(struct platform_device *pdev)
 		}
 
 		rockchip_add_endpoints(dev, &match, port);
+		of_node_put(port);
+	}
+
+	port = of_parse_phandle(np, "backlight", 0);
+	if (port && of_device_is_available(port)) {
+		component_match_add(dev, &match, compare_of, port);
 		of_node_put(port);
 	}
 

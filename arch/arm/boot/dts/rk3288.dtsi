@@ -131,6 +131,9 @@
 		compatible = "operating-points-v2";
 		opp-shared;
 
+		nvmem-cells = <&cpu_leakage>;
+		nvmem-cell-names = "cpu_leakage";
+
 		opp-126000000 {
 			opp-hz = /bits/ 64 <126000000>;
 			opp-microvolt = <900000>;
@@ -278,14 +281,6 @@
 			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
 			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
 		clock-frequency = <24000000>;
-	};
-
-	timer: timer@ff810000 {
-		compatible = "rockchip,rk3288-timer";
-		reg = <0x0 0xff810000 0x0 0x20>;
-		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&xin24m>, <&cru PCLK_TIMER>;
-		clock-names = "timer", "pclk";
 	};
 
 	display-subsystem {
@@ -584,7 +579,7 @@
 		clocks = <&cru SCLK_TSADC>, <&cru PCLK_TSADC>;
 		clock-names = "tsadc", "apb_pclk";
 		assigned-clocks = <&cru SCLK_TSADC>;
-		assigned-clock-rates = <10000>;
+		assigned-clock-rates = <5000>;
 		resets = <&cru SRST_TSADC>;
 		reset-names = "tsadc-apb";
 		pinctrl-names = "init", "default", "sleep";
@@ -743,6 +738,14 @@
 		clocks = <&cru PCLK_PWM>;
 		clock-names = "pwm";
 		status = "disabled";
+	};
+
+	timer: timer@ff6b0000 {
+		compatible = "rockchip,rk3288-timer";
+		reg = <0x0 0xff6b0000 0x0 0x20>;
+		interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&xin24m>, <&cru PCLK_TIMER>;
+		clock-names = "timer", "pclk";
 	};
 
 	bus_intmem@ff700000 {
@@ -966,12 +969,12 @@
 		rockchip,grf = <&grf>;
 		#clock-cells = <1>;
 		#reset-cells = <1>;
-		assigned-clocks = <&cru PLL_GPLL>, <&cru PLL_CPLL>,
+		assigned-clocks = <&cru PLL_GPLL>,
                                   <&cru PLL_NPLL>, <&cru ACLK_CPU>,
                                   <&cru HCLK_CPU>, <&cru PCLK_CPU>,
                                   <&cru ACLK_PERI>, <&cru HCLK_PERI>,
                                   <&cru PCLK_PERI>;
-		assigned-clock-rates = <594000000>, <400000000>,
+		assigned-clock-rates = <594000000>,
 				       <500000000>, <300000000>,
 				       <150000000>, <75000000>,
 				       <300000000>, <150000000>,
@@ -1071,10 +1074,33 @@
 		status = "disabled";
 	};
 
+	iep: iep@ff90000 {
+		compatible = "rockchip,iep";
+		iommu_enabled = <1>;
+		iommus = <&iep_mmu>;
+		reg = <0x0 0xff900000 0x0 0x800>;
+		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&cru ACLK_IEP>, <&cru HCLK_IEP>;
+		clock-names = "aclk_iep", "hclk_iep";
+		power-domains = <&power RK3288_PD_VIO>;
+		allocator = <1>;
+		version = <1>;
+		status = "disabled";
+	};
+
+	iep_mmu: iommu@ff900800 {
+		compatible = "rockchip,iommu";
+		reg = <0x0 0xff900800 0x0 0x40>;
+		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH 0>;
+		interrupt-names = "iep_mmu";
+		#iommu-cells = <0>;
+		status = "disabled";
+	};
+
 	cif_isp0: cif_isp@ff910000 {
 		compatible = "rockchip,rk3288-cif-isp";
 		rockchip,grf = <&grf>;
-		reg = <0x0 0xff910000 0x0 0x10000>, <0x0 0xff968000 0x0 0x4000>;
+		reg = <0x0 0xff910000 0x0 0x4000>, <0x0 0xff968000 0x0 0x4000>;
 		reg-names = "register", "csihost-register";
 		clocks = <&cru ACLK_ISP>, <&cru HCLK_ISP>,
 			<&cru SCLK_ISP>, <&cru SCLK_ISP_JPE>,
@@ -1088,6 +1114,9 @@
 		reset-names = "rst_isp";
 		interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "cif_isp10_irq";
+		power-domains = <&power RK3288_PD_VIO>;
+		rockchip,isp,iommu-enable = <1>;
+		iommus = <&isp_mmu>;
 		status = "disabled";
 	};
 
@@ -1161,6 +1190,7 @@
 	vopb: vop@ff930000 {
 		compatible = "rockchip,rk3288-vop";
 		reg = <0x0 0xff930000 0x0 0x19c>, <0x0 0xff931000 0x0 0x1000>;
+		reg-names = "regs", "gamma_lut";
 		interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru ACLK_VOP0>, <&cru DCLK_VOP0>, <&cru HCLK_VOP0>;
 		clock-names = "aclk_vop", "dclk_vop", "hclk_vop";
@@ -1184,9 +1214,9 @@
 				remote-endpoint = <&edp_in_vopb>;
 			};
 
-			vopb_out_mipi: endpoint@2 {
+			vopb_out_dsi0: endpoint@2 {
 				reg = <2>;
-				remote-endpoint = <&mipi_in_vopb>;
+				remote-endpoint = <&dsi0_in_vopb>;
 			};
 
 			vopb_out_lvds: endpoint@3 {
@@ -1211,6 +1241,7 @@
 	vopl: vop@ff940000 {
 		compatible = "rockchip,rk3288-vop";
 		reg = <0x0 0xff940000 0x0 0x19c>, <0x0 0xff941000 0x0 0x1000>;
+		reg-names = "regs", "gamma_lut";
 		interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru ACLK_VOP1>, <&cru DCLK_VOP1>, <&cru HCLK_VOP1>;
 		clock-names = "aclk_vop", "dclk_vop", "hclk_vop";
@@ -1234,9 +1265,9 @@
 				remote-endpoint = <&edp_in_vopl>;
 			};
 
-			vopl_out_mipi: endpoint@2 {
+			vopl_out_dsi0: endpoint@2 {
 				reg = <2>;
-				remote-endpoint = <&mipi_in_vopl>;
+				remote-endpoint = <&dsi0_in_vopl>;
 			};
 
 			vopl_out_lvds: endpoint@3 {
@@ -1259,7 +1290,7 @@
 		status = "disabled";
 	};
 
-	mipi_dsi: mipi@ff960000 {
+	dsi0: dsi@ff960000 {
 		compatible = "rockchip,rk3288-mipi-dsi", "snps,dw-mipi-dsi";
 		reg = <0x0 0xff960000 0x0 0x4000>;
 		interrupts = <GIC_SPI 19 IRQ_TYPE_LEVEL_HIGH>;
@@ -1272,16 +1303,16 @@
 		status = "disabled";
 
 		ports {
-			mipi_in: port {
+			dsi0_in: port {
 				#address-cells = <1>;
 				#size-cells = <0>;
-				mipi_in_vopb: endpoint@0 {
+				dsi0_in_vopb: endpoint@0 {
 					reg = <0>;
-					remote-endpoint = <&vopb_out_mipi>;
+					remote-endpoint = <&vopb_out_dsi0>;
 				};
-				mipi_in_vopl: endpoint@1 {
+				dsi0_in_vopl: endpoint@1 {
 					reg = <1>;
-					remote-endpoint = <&vopl_out_mipi>;
+					remote-endpoint = <&vopl_out_dsi0>;
 				};
 			};
 		};

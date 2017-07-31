@@ -39,6 +39,7 @@
  */
 
 /dts-v1/;
+#include <dt-bindings/clock/rockchip,rk808.h>
 #include "rk3288.dtsi"
 
 / {
@@ -79,7 +80,7 @@
 
 	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
-		clocks = <&rk808 1>;
+		clocks = <&rk808 RK808_CLKOUT1>;
 		clock-names = "ext_clock";
 		pinctrl-names = "default";
 		pinctrl-0 = <&chip_enable_h>, <&wifi_enable_h>;
@@ -90,7 +91,8 @@
 		 * - SDIO_RESET_L_WL_REG_ON
 		 * - PDN (power down when low)
 		 */
-		reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>, <&gpio4 27 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>,
+			<&gpio4 27 GPIO_ACTIVE_LOW>;
 	};
 
 	gpio-keys {
@@ -120,14 +122,14 @@
 			linux,default-trigger = "default-on";
 		};
 
-		heartbeat-led {
-			gpios=<&gpio1 25 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger="heartbeat";
-		};
-
 		act-led {
 			gpios=<&gpio1 24 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger="mmc0";
+		};
+
+		led1-led {
+			gpios=<&gpio1 25 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger="heartbeat";
 		};
 	};
 
@@ -189,6 +191,15 @@
 	tx_delay = <0x30>;
 	rx_delay = <0x10>;
 	status = "okay";
+};
+
+&dsi0 {
+	status = "disabled";
+	mipi_panel: mipi-panel {
+		compatible ="asus,tc358762";
+		reg = <0>;
+		status = "okay";
+	};
 };
 
 &gpu {
@@ -417,6 +428,44 @@
 	};
 };
 
+&i2c1 {
+	status = "okay";
+
+	pcm5122: pcm5122@4c {
+		#sound-dai-cells = <0>;
+		compatible = "ti,pcm5122";
+		reg = <0x4c>;
+		status = "disabled";
+	};
+};
+
+&i2c3 {
+	status = "okay";
+};
+
+&i2c4 {
+	status = "okay";
+};
+
+&spi2 {
+	status = "okay";
+	max-freq = <50000000>;
+
+	spidev@0 {
+		compatible = "rockchip,spi_tinker";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		spi-cpha = <1>;
+	};
+
+	spidev@1 {
+		compatible = "rockchip,spi_tinker";
+		reg = <1>;
+		spi-max-frequency = <50000000>;
+		spi-cpha = <1>;
+	};
+};
+
 &i2s {
 	#sound-dai-cells = <0>;
 	rockchip,bclk-fs = <128>;
@@ -428,14 +477,6 @@
 
 	sdcard-supply = <&vccio_sd>;
 	wifi-supply = <&vcc_18>;
-};
-
-&pwm0 {
-	status = "okay";
-};
-
-&rga {
-	status = "okay";
 };
 
 &sdio0 {
@@ -456,6 +497,10 @@
 	supports-sdio;
 };
 
+&pwm0 {
+	status = "okay";
+};
+
 &saradc {
 	vref-supply = <&vcc18_ldo1>;
 	status ="okay";
@@ -465,6 +510,10 @@
 	bus-width = <4>;
 	cap-mmc-highspeed;
 	cap-sd-highspeed;
+	sd-uhs-sdr12;
+	sd-uhs-sdr25;
+	sd-uhs-sdr50;
+	sd-uhs-sdr104;
 	card-detect-delay = <200>;
 	disable-wp;			/* wp not hooked up */
 	num-slots = <1>;
