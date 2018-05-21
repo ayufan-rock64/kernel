@@ -90,6 +90,23 @@
 		regulator-max-microvolt = <5000000>;
 	};
 
+	vcc_io: vcc-io-regulator {
+		compatible = "regulator-fixed", "RK805_DCDC4";
+		regulator-compatible = "RK805_DCDC4";
+		regulator-name = "vcc_io";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-initial-mode = <0x1>;
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vcc_sys>;
+		regulator-state-mem {
+			regulator-mode = <0x2>;
+			regulator-on-in-suspend;
+			regulator-suspend-microvolt = <3300000>;
+		};
+	};
+
 	vcc_sd: sdmmc-regulator {
 		compatible = "regulator-fixed";
 		gpio = <&gpio0 30 GPIO_ACTIVE_LOW>;
@@ -378,21 +395,6 @@
 				regulator-state-mem {
 					regulator-mode = <0x2>;
 					regulator-on-in-suspend;
-				};
-			};
-
-			vcc_io: RK805_DCDC4 {
-				regulator-compatible = "RK805_DCDC4";
-				regulator-name = "vcc_io";
-				regulator-min-microvolt = <3300000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-initial-mode = <0x1>;
-				regulator-boot-on;
-				regulator-always-on;
-				regulator-state-mem {
-					regulator-mode = <0x2>;
-					regulator-on-in-suspend;
-					regulator-suspend-microvolt = <3300000>;
 				};
 			};
 
