@@ -2,6 +2,8 @@ RELEASE ?= $(shell date +%Y%m%d%H%M)
 KERNEL_EXTRAVERSION ?= -rockchip-ayufan-$(RELEASE)
 KERNEL_DEFCONFIG ?= rockchip_linux_defconfig
 
+BOARD ?= rk3328-rock64
+
 export KDEB_PKGVERSION=$(RELEASE)~ayufan
 
 KERNEL_MAKE ?= make \
@@ -45,10 +47,10 @@ kernel-package: .config
 .PHONY: kernel-update-dts
 kernel-update-dts:
 	$(KERNEL_MAKE) dtbs -j$$(nproc)
-	rsync --partial --checksum -rv arch/arm64/boot/dts/rockchip/rk3328-rock64.dtb root@$(REMOTE_HOST):$(REMOTE_DIR)/boot/efi/dtb
+	rsync --partial --checksum -rv arch/arm64/boot/dts/rockchip/$(BOARD).dtb root@$(REMOTE_HOST):$(REMOTE_DIR)/boot/efi/dtb
 
 .PHONY: kernel-update
 kernel-update-image:
 	rsync --partial --checksum -rv arch/arm64/boot/Image root@$(REMOTE_HOST):$(REMOTE_DIR)/boot/efi/Image
-	rsync --partial --checksum -rv arch/arm64/boot/dts/rockchip/rk3328-rock64.dtb root@$(REMOTE_HOST):$(REMOTE_DIR)/boot/efi/dtb
+	rsync --partial --checksum -rv arch/arm64/boot/dts/rockchip/$(BOARD).dtb root@$(REMOTE_HOST):$(REMOTE_DIR)/boot/efi/dtb
 	rsync --partial --checksum -av out/linux_modules/lib/ root@$(REMOTE_HOST):$(REMOTE_DIR)/lib
