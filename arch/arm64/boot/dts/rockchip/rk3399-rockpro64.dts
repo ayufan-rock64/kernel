@@ -52,6 +52,10 @@
 		stdout-path = "serial2:1500000n8";
 	};
 
+	aliases {
+		ethernet0 = &gmac;
+	};
+
 	/delete-node/ fiq-debugger;
 };
 
@@ -175,4 +179,9 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie_clkreqn_cpm>;
 	status = "okay";
+};
+
+&gmac {
+	tx_delay = <0x28>;
+	rx_delay = <0x20>;
 };
