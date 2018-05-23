@@ -46,6 +46,13 @@
 / {
 	model = "Pine64 RockPro64";
 	compatible = "pine64,rockpro64", "rockchip,rk3399";
+
+	chosen {
+		bootargs = "earlyprintk=uart8250-32bit,0xff1a0000 swiotlb=1";
+		stdout-path = "serial2:1500000n8";
+	};
+
+	/delete-node/ fiq-debugger;
 };
 
 &pinctrl {
