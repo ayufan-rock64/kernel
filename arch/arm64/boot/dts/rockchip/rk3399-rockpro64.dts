@@ -57,6 +57,70 @@
 	};
 
 	/delete-node/ fiq-debugger;
+
+	dc_12v: dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	vcc3v3_pcie: vcc3v3-pcie-regulator {
+		compatible = "regulator-fixed";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+		gpio = <&gpio1 RK_PD0 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pcie_pwr_en>;
+		regulator-name = "vcc3v3_pcie";
+		regulator-enable-ramp-delay = <8000>;
+		vin-supply = <&dc_12v>;
+	};
+
+	leds {
+		status = "okay";
+		compatible = "gpio-leds";
+		work-led {
+			gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
+			default-state = "on";
+			mode = <0x23>;
+		};
+		diy-led {
+			gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "on";
+			mode = <0x23>;
+		};
+	};
+
+	rk_key: rockchip-key {
+		compatible = "rockchip,key";
+		status = "okay";
+
+		io-channels = <&saradc 1>;
+
+		power-key {
+			gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+			linux,code = <116>;
+			label = "power";
+			gpio-key,wakeup;
+		};
+	};
+};
+
+&host_vbus_drv {
+	rockchip,pins =
+		<4 26 RK_FUNC_GPIO &pcfg_pull_none>;
+};
+
+&vcc5v0_host {
+	gpio = <&gpio4 26 GPIO_ACTIVE_HIGH>;
 };
 
 &pinctrl {
@@ -126,6 +190,17 @@
 				<1 18 RK_FUNC_GPIO &pcfg_output_low>;
 		};
 	};
+
+	pcie {
+		pcie_pwr_en: pcie-pwr-en {
+			rockchip,pins =
+				<1 RK_PD0 RK_FUNC_GPIO &pcfg_pull_up_20ma>;
+		};
+		pcie_3g_drv: pcie-3g-drv {
+			rockchip,pins =
+				<0 2 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
 };
 
 &i2c4 {
@@ -173,9 +248,11 @@
 };
 
 &pcie0 {
-	ep-gpios = <&gpio1 0x18 0x0>;
+	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+	assigned-clock-rates = <100000000>;
+	ep-gpios = <&gpio2 RK_PD4 GPIO_ACTIVE_HIGH>;
 	num-lanes = <4>;
-	max-link-speed = <2>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie_clkreqn_cpm>;
 	status = "okay";
@@ -184,4 +261,41 @@
 &gmac {
 	tx_delay = <0x28>;
 	rx_delay = <0x20>;
+};
+
+&sdmmc {
+	keep-power-in-suspend;
+};
+
+&sdhci {
+	keep-power-in-suspend;
+};
+
+&io_domains {
+	status = "okay";
+	bt656-supply = <&vcc1v8_s0>;
+	audio-supply = <&vcc_3v0>;
+	sdmmc-supply = <&vcc_sd>;
+	gpio1830-supply = <&vcc_3v0>;
+};
+
+&pmu_io_domains {
+	status = "okay";
+	pmu1830-supply = <&vcc_3v0>;
+};
+
+&rk808 {
+	/delete-node/ vcc3v0_sd;
+
+	vcca3v0_codec: LDO_REG5 {
+		regulator-name = "vcca3v0_codec";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-state-mem {
+			regulator-on-in-suspend;
+			regulator-suspend-microvolt = <3000000>;
+		};
+	};
 };
