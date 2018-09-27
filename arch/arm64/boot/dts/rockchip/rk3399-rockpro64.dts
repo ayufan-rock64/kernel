@@ -282,7 +282,7 @@
 		cooling-min-state = <0>;
 		cooling-max-state = <3>;
 		#cooling-cells = <2>;
-		cooling-levels = <0 102 170 230>;
+		cooling-levels = <0 120 200 255>;
 	}; 
 
 	rk_key: rockchip-key {
@@ -640,15 +640,15 @@
 };
 
 &threshold {
-	temperature = <80000>;
+	temperature = <60000>;
 };
 
 &target {
-	temperature = <95000>;
+	temperature = <80000>;
 };
 
 &soc_crit {
-	temperature = <100000>;
+	temperature = <95000>;
 };
 
 &cooling_maps {
