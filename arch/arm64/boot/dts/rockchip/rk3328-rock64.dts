@@ -90,13 +90,23 @@
 
 	vcc_sd: sdmmc-regulator {
 		compatible = "regulator-fixed";
-		gpio = <&gpio0 30 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&sdmmc0m1_gpio>;
 		regulator-name = "vcc_sd";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
 		vin-supply = <&vcc_io>;
+	};
+
+	vccq_sd: sdmmc-regulator-vccq {
+		compatible = "regulator-gpio";
+		regulator-name = "vccq_sd";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdmmc0m1_gpio>;
+		gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
+		states = <3300000 0
+			  1800000 1>;
 	};
 
 	vcc_host_5v: vcc-host-5v-regulator {
@@ -520,7 +530,7 @@
 
 	vccio1-supply = <&vcc_io>;
 	vccio2-supply = <&vcc18_emmc>;
-	vccio3-supply = <&vcc_io>;
+	vccio3-supply = <&vccq_sd>;
 	vccio4-supply = <&vdd_18>;
 	vccio5-supply = <&vcc_io>;
 	vccio6-supply = <&vcc_io>;
@@ -693,8 +703,9 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_dectn &sdmmc0_bus4>;
 	vmmc-supply = <&vcc_sd>;
-	vqmmc-supply = <&vcc_sd>;
+	vqmmc-supply = <&vccq_sd>;
 	supports-sd;
+	sd-uhs-sdr104;
 	status = "okay";
 };
 
